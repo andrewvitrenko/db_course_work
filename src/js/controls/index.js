@@ -18,12 +18,12 @@ router.get('/projects', (req, res) => {
     }
 
     const convertedData = projects.map(({
-                                          id,
-                                          name,
-                                          description,
-                                          manager_id,
-                                          workspace_id
-                                        }) => ({
+      id,
+      name,
+      description,
+      manager_id,
+      workspace_id
+    }) => ({
       name,
       description,
       id: decodeId(id),
@@ -39,7 +39,7 @@ router.get('/projects', (req, res) => {
 
 router.get('/project/:id', (req, res) => {
   const {id} = req.params;
-  connection.query(`select * from project where id = unhex("${id}")`, (err, project) => {
+  connection.query(`select * from project where id = unhex("${id}")`, (err, [project]) => {
     if (err) {
       res.status(500).json({
         message: ERRORS.SERVER_ERROR,
@@ -47,28 +47,33 @@ router.get('/project/:id', (req, res) => {
       return;
     }
 
-    const convertedData = project.map(({
-                                         id,
-                                         name,
-                                         description,
-                                         manager_id,
-                                         workspace_id
-                                       }) => ({
-      name,
-      description,
-      id: decodeId(id),
-      manager_id: decodeId(manager_id),
-      workspace_id: decodeId(workspace_id),
-    }));
+    if (!project) {
+      res.status(404).json({
+        message: ERRORS.NOT_FOUND,
+      });
+      return;
+    }
 
     res.status(200).json({
-      data: convertedData,
+      data: {
+        ...project,
+        id: decodeId(project.id),
+        manager_id: decodeId(project.manager_id),
+        workspace_id: decodeId(project.workspace_id),
+      },
     });
   });
 });
 
 router.post('/project', (req, res) => {
   const {name, description, workspace_id, manager_id} = req.body;
+
+  if (!(name && description && workspace_id && manager_id)) {
+    res.status(400).json({
+      message: ERRORS.ALL_FIELDS_REQUIRED,
+    });
+    return;
+  }
 
   const id = uuid().replaceAll('-', '');
 
@@ -86,7 +91,7 @@ router.post('/project', (req, res) => {
         unhex("${workspace_id}"),
         unhex("${manager_id}")
       )`,
-    (err, project) => {
+    (err, result) => {
       if (err) {
         res.status(500).json({
           message: ERRORS.SERVER_ERROR,
@@ -94,10 +99,8 @@ router.post('/project', (req, res) => {
         return;
       }
 
-      console.log(project);
-
       res.status(200).json({
-        data: project,
+        data: result,
       });
     }
   );
@@ -110,6 +113,13 @@ router.put('/project/:id', (req, res) => {
     if (err) {
       res.status(500).json({
         message: ERRORS.SERVER_ERROR,
+      });
+      return;
+    }
+
+    if (!project) {
+      res.status(404).json({
+        message: ERRORS.NOT_FOUND,
       });
       return;
     }
