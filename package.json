@@ -9,7 +9,7 @@
   "scripts": {
     "docs:dev": "npx vuepress dev docs",
     "docs:build": "npx vuepress build docs",
-    "publish": "publish.sh",
+    "publish": "./publish.sh",
     "start": "node ./src/js/index.js",
     "dev": "nodemon ./src/js/index.js"
   },
