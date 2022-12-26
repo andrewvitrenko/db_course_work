@@ -4,7 +4,7 @@ const router = Router();
 
 const connection = require('../db');
 
-const ERRORS = require('../constants/errors');
+const { ERRORS, SUCCESS } = require('../constants');
 
 const {decodeId} = require('../utils');
 
@@ -91,7 +91,7 @@ router.post('/project', (req, res) => {
         unhex("${workspace_id}"),
         unhex("${manager_id}")
       )`,
-    (err, result) => {
+    (err) => {
       if (err) {
         res.status(500).json({
           message: ERRORS.SERVER_ERROR,
@@ -99,8 +99,8 @@ router.post('/project', (req, res) => {
         return;
       }
 
-      res.status(200).json({
-        data: result,
+      res.status(201).json({
+        message: SUCCESS.PROJECT_CREATED,
       });
     }
   );
@@ -143,7 +143,7 @@ router.put('/project/:id', (req, res) => {
         workspace_id = unhex("${workspace_id}"),
         manager_id = unhex("${manager_id}")
         where id = unhex("${id}")`,
-      (err, result) => {
+      (err) => {
         if (err) {
           res.status(500).json({
             message: ERRORS.SERVER_ERROR,
@@ -152,7 +152,7 @@ router.put('/project/:id', (req, res) => {
         }
 
         res.status(200).json({
-          data: result,
+          message: SUCCESS.PROJECT_UPDATED,
         });
       }
     );
@@ -161,7 +161,7 @@ router.put('/project/:id', (req, res) => {
 
 router.delete('/project/:id', (req, res) => {
   const {id} = req.params;
-  connection.query(`delete from project where id = unhex("${id}")`, (err, result) => {
+  connection.query(`delete from project where id = unhex("${id}")`, (err) => {
     if (err) {
       res.status(500).json({
         message: ERRORS.SERVER_ERROR,
@@ -170,7 +170,7 @@ router.delete('/project/:id', (req, res) => {
     }
 
     res.status(200).json({
-      data: result,
+      message: SUCCESS.PROJECT_DELETED,
     });
   });
 });
